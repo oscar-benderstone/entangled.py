@@ -31,9 +31,9 @@ def stitch(*, force: bool = False, show: bool = False):
 
     # these imports depend on config being read
     from ..markdown_reader import read_markdown_file
-    from ..code_reader import CodeReader
+    from ..code_reader import read_code_file
     from ..hooks import get_hooks
-    
+
     input_file_list = get_input_files()
     hooks = get_hooks()
 
@@ -45,6 +45,8 @@ def stitch(*, force: bool = False, show: bool = False):
         mode = TransactionMode.FAIL
 
     refs = ReferenceMap()
+    hooks = get_hooks()
+    logging.debug("stitching with hooks: %s", [h.__module__ for h in hooks])
     content: dict[Path, list[Content]] = {}
     try:
         for path in input_file_list:
@@ -56,8 +58,7 @@ def stitch(*, force: bool = False, show: bool = False):
             for path in t.db.managed:
                 logging.debug("reading `%s`", path)
                 t.update(path)
-                with open(path, "r") as f:
-                    CodeReader(path, refs).run(f.read())
+                read_code_file(path, refs)
 
             for path in input_file_list:
                 t.write(path, stitch_markdown(refs, content[path]), [])

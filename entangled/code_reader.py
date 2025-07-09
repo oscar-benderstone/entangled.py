@@ -6,6 +6,7 @@ import re
 
 from .document import ReferenceId, TextLocation, ReferenceMap
 from .errors.user import IndentationError
+from .hooks.base import HookBase
 
 
 @dataclass
@@ -56,7 +57,9 @@ class CodeReader(mawk.RuleSet):
 
         self.stack.append(
             Frame(
-                ReferenceId(m["ref_name"], PurePath(m["source"]), ref_count), m["indent"], content
+                ReferenceId(m["ref_name"], PurePath(m["source"]), ref_count),
+                m["indent"],
+                content,
             )
         )
         return []
@@ -78,3 +81,58 @@ class CodeReader(mawk.RuleSet):
             raise IndentationError(self.location)
         self.current.content.append(line.removeprefix(self.current.indent))
         return []
+
+
+def read_code_file(path: Path, refs: ReferenceMap):
+    with open(path, "r") as f:
+        CodeReader(path, refs).run(f.read())
+
+
+# def read_code_file(
+#     path: Path, refs: ReferenceMap | None = None, hooks: list[HookBase] | None = None
+# ) -> tuple[ReferenceMap, list[Content]]:
+#
+#     with open(path, "r") as f:
+#         rel_path = path.resolve().relative_to(Path.cwd())
+#         return read_markdown_string(f.read(), rel_path, refs, hooks)
+
+# def read_markdown_string(
+#         text: str,
+#         path_str: Path = Path("-"),
+#         refs: ReferenceMap | None = None,
+#         hooks: list[HookBase] | None = None) \
+#         -> tuple[ReferenceMap, list[Content]]:
+#     md = MarkdownLexer(path_str)
+#     md.run(text)
+#
+#     hooks = hooks if hooks is not None else []
+#     refs = refs if refs is not None else ReferenceMap()
+#
+#     def process(r: RawContent) -> Content:
+#         match r:
+#             case CodeBlock():
+#                 for h in hooks: h.on_read(r)
+#                 block_id = get_id(r.properties)
+#                 target_file = get_attribute(r.properties, "file")
+#
+#                 if mode := get_attribute(r.properties, "mode"):
+#                     r.mode = int(mode, 8)
+#
+#                 ref_name = block_id or target_file
+#                 if ref_name is None:
+#                     ref_name = f"unnamed-{r.origin}"
+#                 ref = refs.new_id(r.origin.filename, ref_name)
+#
+#                 refs[ref] = r
+#                 if target_file is not None:
+#                     refs.targets.add(target_file)
+#                 if target_file is not None and block_id is not None:
+#                     refs.alias[target_file] = block_id
+#
+#                 return ref
+#
+#             case PlainText(): return r
+#
+#     content = list(map(process, md.raw_content))
+#     logging.debug("found ids: %s", list(refs.map.keys()))
+#     return refs, content

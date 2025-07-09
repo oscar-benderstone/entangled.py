@@ -31,11 +31,6 @@ class HookBase:
         the reference map. This applies to both tangling and stitching."""
         pass
 
-    def on_code_read(self, refs: ReferenceMap):
-        """Called when source code is being read, before the assembling of
-        the reference map. This only applies to stitching."""
-        pass
-
     def pre_tangle(self, refs: ReferenceMap):
         """Executed after reading Markdown, but before actually tangling files.
         This allows the opportunity to add more targets to the reference map.
@@ -50,4 +45,26 @@ class HookBase:
 
     def post_tangle(self, refs: ReferenceMap):
         """Called after the tangle transaction is finished."""
+        pass
+
+    def on_code_read(self, refs: ReferenceMap):
+        """Called when source files are being read, before the assembling of
+        the reference map. This only applies to stitching."""
+        pass
+
+    def pre_stitch(self, refs: ReferenceMap):
+        """Executed after reading the Markdown and source code,
+        but before actually stitching files.
+        This allows the opportunity to add more targets to the reference map.
+        """
+        pass
+
+    def on_stitch(self, t: Transaction, refs: ReferenceMap):
+        """Executed after other targets were stitched, but during the same
+        transaction. If you want to write a file, consider doing so as part of
+        the transaction."""
+        pass
+
+    def post_stitch(self, refs: ReferenceMap):
+        """Called after the stitched transaction is finished."""
         pass

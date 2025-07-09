@@ -8,11 +8,11 @@ log = logger()
 class Hook(HookBase):
     def on_read(self, code: CodeBlock):
         if code.language is None:
-            log.info("Failed to find language")
+            log.error("Failed to find language")
             return
 
         if code.language.doc_comment is None:
-            log.info("Need an input DocComment")
+            log.error("Need an input DocComment")
             return
 
         # doc_comment = f"{code.language.doc_comment}|"

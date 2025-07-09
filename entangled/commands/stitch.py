@@ -9,10 +9,15 @@ from ..config import config
 from ..document import ReferenceMap, Content, PlainText, ReferenceId
 from ..transaction import transaction, TransactionMode
 from ..errors.user import UserError
+from ..hooks import get_hooks, HookBase
 from .tangle import get_input_files
 
 
-def stitch_markdown(reference_map: ReferenceMap, content: list[Content]) -> str:
+def stitch_markdown(
+    reference_map: ReferenceMap,
+    content: list[Content],
+    hooks: list[HookBase] | None = None,
+) -> str:
     def get(item: Content):
         match item:
             case PlainText(s):
@@ -32,7 +37,6 @@ def stitch(*, force: bool = False, show: bool = False):
     # these imports depend on config being read
     from ..markdown_reader import read_markdown_file
     from ..code_reader import read_code_file
-    from ..hooks import get_hooks
 
     input_file_list = get_input_files()
     hooks = get_hooks()
@@ -58,10 +62,13 @@ def stitch(*, force: bool = False, show: bool = False):
             for path in t.db.managed:
                 logging.debug("reading `%s`", path)
                 t.update(path)
-                read_code_file(path, refs)
+                read_code_file(path, refs, hooks)
+
+            for h in hooks:
+                h.pre_stitch(refs)
 
             for path in input_file_list:
-                t.write(path, stitch_markdown(refs, content[path]), [])
+                t.write(path, stitch_markdown(refs, content[path], hooks), [])
 
     except UserError as e:
         logging.error(str(e))

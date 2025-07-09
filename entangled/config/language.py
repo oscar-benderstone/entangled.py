@@ -13,6 +13,23 @@ class Comment:
 
 
 @dataclass
+class DocComment(Comment):
+    """
+    Optional DocComment method for a language. For example: `DocComment("///", "")`
+    works for Rust, `DocComment("/**", "*/")` in Java, and so on.
+
+    With the `doc_comments` hook, these can be stitched
+    to the beginning of the corresponding code block,
+    or tangled as a comment in the source file.
+
+    Note: context senitive DocComments (like Python's `DocComment(\"\"\", \"\"\")`
+    are currently not supported.
+    """
+
+    pass
+
+
+@dataclass
 class Language:
     """Language information. Given a language we may have any number of short-hands
     to indicate a code block is written in that language. If a language supports
@@ -22,6 +39,7 @@ class Language:
     name: str
     identifiers: list[str]
     comment: Comment
+    doc_comment: Optional[DocComment] = None
     line_directive: Optional[str] = None
 
 
@@ -29,14 +47,14 @@ languages = [
     Language("Bash", ["sh", "bash"], Comment("#")),
     Language("C", ["c", "cpp", "c++"], Comment("/*", "*/")),
     Language("Python", ["python"], Comment("#")),
-    Language("Rust", ["rust"], Comment("//")),
+    Language("Rust", ["rust"], Comment("//"), DocComment("///")),
     Language("Haskell", ["haskell"], Comment("--")),
     Language("OCaml", ["ocaml", "ml"], Comment("(*", "*)")),
     Language(
         "Lisp", ["scheme", "r5rs", "r6rs", "r7rs", "racket", "clojure"], Comment(";")
     ),
     Language("Julia", ["julia"], Comment("#")),
-    Language("Java", ["java"], Comment("//")),
+    Language("Java", ["java"], Comment("//"), DocComment("/**"), "*/"),
     Language("PureScript", ["pure", "purs", "purescript"], Comment("--")),
     Language("CSS", ["css"], Comment("/*", "*/")),
     Language("Lua", ["lua"], Comment("--")),
@@ -48,5 +66,5 @@ languages = [
     Language("Javascript", ["javascript", "js", "ecma"], Comment("//")),
     Language("Go", ["go", "golang"], Comment("//")),
     Language("R", ["r", "rlang"], Comment("#")),
-    Language("Nix", ["nix"], Comment("#"))
+    Language("Nix", ["nix"], Comment("#")),
 ]
